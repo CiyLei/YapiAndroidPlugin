@@ -1,0 +1,32 @@
+<idea-plugin>
+  <id>com.ciy.plugin</id>
+  <name>api清单生成</name>
+  <version>1.0</version>
+  <vendor email="903736662@qq.com" url="https://github.com/CiyLei">CiyLei</vendor>
+
+  <description>api清单生成</description>
+
+  <change-notes>api清单生成</change-notes>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+  <idea-version since-build="173.0"/>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+       on how to target different products -->
+  <!-- uncomment to enable plugin in all products
+  <depends>com.intellij.modules.lang</depends>
+  -->
+
+  <extensions defaultExtensionNs="com.ciy.plugin">
+    <!-- Add your extensions here -->
+  </extensions>
+
+  <actions>
+    <!-- Add your actions here -->
+    <action id="buildApiListButton" class="com.ciy.plugin.ShowInputDialogAction" text="生成ApiList" description="生成ApiList" icon="Icons.buildIcon">
+      <add-to-group group-id="MainToolBar" anchor="first"/>
+      <add-to-group group-id="NavBarToolBar" anchor="first"/>
+    </action>
+  </actions>
+
+</idea-plugin>
