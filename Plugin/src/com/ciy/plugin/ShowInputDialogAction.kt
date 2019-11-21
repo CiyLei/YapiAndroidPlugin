@@ -21,24 +21,22 @@ class ShowInputDialogAction : AnAction() {
         isEnabledInModalContext = true
     }
 
-    private var project: Project? = null
-
     /**
      * 点击图标
      */
     override fun actionPerformed(p0: AnActionEvent) {
-        project = p0.project
-        if (!ApplicationManager.getApplication().isHeadlessEnvironment) {
+        if (!ApplicationManager.getApplication().isHeadlessEnvironment && p0.project != null) {
             InputUrlDialog(InputUrlDialog.InputUrlDialogListener {
-                showSelectApiDialog(it)
+                showSelectApiDialog(p0.project!!, it)
             }).isVisible = true
         }
+
     }
 
     /**
      * 选择Api
      */
-    fun showSelectApiDialog(p: ProjectInfoBean) {
+    fun showSelectApiDialog(project: Project, p: ProjectInfoBean) {
         SelectApiDialog(project, p, SelectApiDialog.SelectApiDialogListener { module, apiBeans ->
             analysisApiList(module, apiBeans)
         }).isVisible = true

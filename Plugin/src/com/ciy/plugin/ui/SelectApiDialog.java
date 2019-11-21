@@ -182,27 +182,20 @@ public class SelectApiDialog extends JDialog {
      * 加载所有模块
      */
     private void loadModule() {
-        for (int i = 1; i < moduleList.size(); i++) {
-            cbModule.addItem(moduleList.get(i).getName());
+        for (Module module : moduleList) {
+            cbModule.addItem(module.getName());
+        }
+        // 选择root模块以外的第一个模块
+        if (moduleList.size() > 1) {
+            cbModule.setSelectedIndex(1);
         }
     }
 
     private void onOK() {
-        if (this.listener != null) {
-            String moduleName = (String) cbModule.getSelectedItem();
-            Module selectModule = null;
-            for (Module module : moduleList) {
-                if (module.getName().equals(moduleName)) {
-                    selectModule = module;
-                    break;
-                }
-            }
-            if (selectModule != null) {
-                this.listener.onOk(selectModule, apiList.stream().filter(ApiBean::getSelect).collect(Collectors.toList()));
-                dispose();
-            } else {
-                lb.setText("无法找到模块");
-            }
+        if (this.listener != null && cbModule.getSelectedIndex() < moduleList.size()) {
+            Module selectModule = moduleList.get(cbModule.getSelectedIndex());
+            this.listener.onOk(selectModule, apiList.stream().filter(ApiBean::getSelect).collect(Collectors.toList()));
+            dispose();
         }
     }
 
