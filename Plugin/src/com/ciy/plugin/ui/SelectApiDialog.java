@@ -192,10 +192,14 @@ public class SelectApiDialog extends JDialog {
     }
 
     private void onOK() {
-        if (this.listener != null && cbModule.getSelectedIndex() < moduleList.size()) {
+        if (cbModule.getSelectedIndex() < moduleList.size() && !tfPack.getText().isEmpty()) {
             Module selectModule = moduleList.get(cbModule.getSelectedIndex());
-            this.listener.onOk(selectModule, apiList.stream().filter(ApiBean::getSelect).collect(Collectors.toList()));
+            if (listener != null) {
+                this.listener.onOk(selectModule, tfPack.getText(), apiList.stream().filter(ApiBean::getSelect).collect(Collectors.toList()));
+            }
             dispose();
+        } else {
+            lb.setText("模块或者包名格式错误");
         }
     }
 
@@ -211,6 +215,6 @@ public class SelectApiDialog extends JDialog {
     }
 
     public interface SelectApiDialogListener {
-        void onOk(Module module, List<ApiBean> apiBeans);
+        void onOk(Module module, String packName, List<ApiBean> apiBeans);
     }
 }

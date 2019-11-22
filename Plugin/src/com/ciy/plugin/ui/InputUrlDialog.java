@@ -7,6 +7,8 @@ import com.ciy.plugin.modle.YapiResult;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Key;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,10 +24,11 @@ public class InputUrlDialog extends JDialog {
     private JTextField tfUrl;
     private JTextField tfToken;
     private JLabel lb;
+    private Project project;
     private InputUrlDialogListener listener;
     private OkHttpClient httpClient;
 
-    public InputUrlDialog(InputUrlDialogListener listener) {
+    public InputUrlDialog(Project project, InputUrlDialogListener listener) {
         setContentPane(contentPane);
         setModal(true);
         setTitle("ApiList生成");
@@ -33,6 +36,7 @@ public class InputUrlDialog extends JDialog {
         // 屏幕居中
         setLocationRelativeTo(null);
         getRootPane().setDefaultButton(btnNext);
+        this.project = project;
         this.listener = listener;
         httpClient = new OkHttpClient();
 
@@ -58,7 +62,8 @@ public class InputUrlDialog extends JDialog {
                     Constants.yapiUrl = tfUrl.getText();
                     Constants.token = tfToken.getText();
                     YapiResult<ProjectInfoBean> projectInfo = new Gson().fromJson(response.body().string(),
-                            new TypeToken<YapiResult<ProjectInfoBean>>() {}.getType());
+                            new TypeToken<YapiResult<ProjectInfoBean>>() {
+                            }.getType());
                     if (projectInfo.getErrcode() == 0 && projectInfo.getData() != null) {
                         if (listener != null) {
                             listener.onNext(projectInfo.getData());
@@ -74,17 +79,9 @@ public class InputUrlDialog extends JDialog {
     }
 
     public static void main(String[] args) {
-        InputUrlDialog dialog = new InputUrlDialog(new InputUrlDialogListener() {
-            @Override
-            public void onNext(ProjectInfoBean projectInfo) {
-                new SelectApiDialog(null, projectInfo, new SelectApiDialog.SelectApiDialogListener() {
-                    @Override
-                    public void onOk(Module module, List<ApiBean> apiBeans) {
+        InputUrlDialog dialog = new InputUrlDialog(null, projectInfo -> new SelectApiDialog(null, projectInfo, (module, packName, apiBeans) -> {
 
-                    }
-                }).setVisible(true);
-            }
-        });
+        }).setVisible(true));
         dialog.setVisible(true);
         System.exit(0);
     }

@@ -20,10 +20,11 @@ public class AnalysisApiListProgressDialog extends JDialog {
     private JLabel lb;
     private List<ApiBean> apiList;
     private List<ApiInfoBean> apiInfoBeans;
+    private AnalysisApiListProgressDialogListener listener;
     private int apiListIndex = 0;
     private OkHttpClient httpClient;
 
-    public AnalysisApiListProgressDialog(List<ApiBean> apiList) {
+    public AnalysisApiListProgressDialog(List<ApiBean> apiList, AnalysisApiListProgressDialogListener listener) {
         setContentPane(contentPane);
         setModal(true);
         setSize(700, 100);
@@ -31,6 +32,7 @@ public class AnalysisApiListProgressDialog extends JDialog {
         setLocationRelativeTo(null);
 
         this.apiList = apiList;
+        this.listener = listener;
         httpClient = new OkHttpClient();
         apiInfoBeans = new ArrayList<>();
 
@@ -39,6 +41,11 @@ public class AnalysisApiListProgressDialog extends JDialog {
         startAnalysis(nextApi());
     }
 
+    /**
+     * 获取下一条请求
+     *
+     * @return
+     */
     private ApiBean nextApi() {
         if (apiList != null && apiListIndex < apiList.size()) {
             return apiList.get(apiListIndex++);
@@ -46,8 +53,13 @@ public class AnalysisApiListProgressDialog extends JDialog {
         return null;
     }
 
+    /**
+     * 开始分析每一条请求
+     *
+     * @param apiBean
+     */
     private void startAnalysis(ApiBean apiBean) {
-        if (apiBean != null && apiListIndex < 20) {
+        if (apiBean != null && apiListIndex < 10) {
             int id = apiBean.get_id();
             HttpUrl url = HttpUrl.parse(Constants.yapiUrl + "/api/interface/get").newBuilder()
                     .addQueryParameter("id", String.valueOf(id))
@@ -61,7 +73,8 @@ public class AnalysisApiListProgressDialog extends JDialog {
                 @Override
                 public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                     YapiResult<ApiInfoBean> apiInfoBean = new Gson().fromJson(response.body().string(),
-                            new TypeToken<YapiResult<ApiInfoBean>>() {}.getType());
+                            new TypeToken<YapiResult<ApiInfoBean>>() {
+                            }.getType());
                     lb.setText(apiBean.getTitle());
                     pb.setValue(apiListIndex);
                     apiInfoBeans.add(apiInfoBean.getData());
@@ -69,13 +82,20 @@ public class AnalysisApiListProgressDialog extends JDialog {
                 }
             });
         } else {
-            System.out.println(1);
+            if (listener != null) {
+                listener.onFinish(apiInfoBeans);
+            }
+            dispose();
         }
     }
 
     public static void main(String[] args) {
-        AnalysisApiListProgressDialog dialog = new AnalysisApiListProgressDialog(new ArrayList<>());
+        AnalysisApiListProgressDialog dialog = new AnalysisApiListProgressDialog(new ArrayList<>(), null);
         dialog.setVisible(true);
         System.exit(0);
+    }
+
+    public interface AnalysisApiListProgressDialogListener {
+        void onFinish(List<ApiInfoBean> apiInfoBeans);
     }
 }

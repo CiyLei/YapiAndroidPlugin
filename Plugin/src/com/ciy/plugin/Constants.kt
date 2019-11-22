@@ -1,5 +1,7 @@
 package com.ciy.plugin
 
+import com.intellij.openapi.util.Key
+
 /**
  * 常量类
  */
