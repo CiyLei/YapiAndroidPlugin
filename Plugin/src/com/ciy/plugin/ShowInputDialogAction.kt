@@ -99,6 +99,7 @@ class ShowInputDialogAction : AnAction() {
             urlMap[it] = property
             urlConstantBuild.addProperty(property)
         }
+        urlConstantBuild.addKdoc("Url常量存放类")
         FileSpec.builder(packName, className).addType(urlConstantBuild.build()).build().writeTo(rootDir)
     }
 
