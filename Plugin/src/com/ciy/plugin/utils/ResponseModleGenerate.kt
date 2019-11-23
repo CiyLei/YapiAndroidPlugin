@@ -20,10 +20,12 @@ object ResponseModleGenerate {
             sourceCode = sourceCode.replace("import ${cacheTypeList[i].name}\n", "")
         }
         var file = File(rootDir.absolutePath + File.separator +
-                sourceFile.packageName.replace(".", File.separator) + File.separator)
+                sourceFile.packageName.replace(".", File.separator) + File.separator + sourceFile.name + ".kt")
         if (file.exists()) {
             file.delete()
         }
+        file = File(rootDir.absolutePath + File.separator +
+                sourceFile.packageName.replace(".", File.separator) + File.separator)
         file.mkdirs()
         file = File(file.absolutePath + File.separator + sourceFile.name + ".kt")
         if (file.createNewFile()) {
@@ -79,7 +81,7 @@ object ResponseModleGenerate {
                         propertyList.add(
                             PropertySpec.builder(key, className).addKdoc(
                                 value.description ?: ""
-                            ).initializer(key).build()
+                            ).initializer(key).mutable().build()
                         )
                     }
                 }
@@ -96,17 +98,17 @@ object ResponseModleGenerate {
                 if (result is PropertySpec) {
                     val listProperty = LIST.parameterizedBy(result.type)
                     return PropertySpec.builder(name, listProperty).addKdoc(jsonSchema.description ?: "")
-                        .initializer(name).build()
+                        .mutable().initializer(name).build()
                 } else if (result is TypeSpec) {
                     val listProperty = LIST.parameterizedBy(ClassName("", result.name!!))
                     return PropertySpec.builder(name, listProperty).addKdoc(jsonSchema.description ?: "")
-                        .initializer(name).build()
+                        .mutable().initializer(name).build()
                 }
             }
             // 基本类型
             "string", "integer", "boolean", "number" -> {
                 return PropertySpec.builder(name, getType(jsonSchema.type)).initializer(name)
-                    .addKdoc(jsonSchema.description ?: "")
+                    .addKdoc(jsonSchema.description ?: "").mutable()
                     .build()
             }
         }
