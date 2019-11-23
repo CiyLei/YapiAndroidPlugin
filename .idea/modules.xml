@@ -3,9 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Plugin/Plugin.iml" filepath="$PROJECT_DIR$/Plugin/Plugin.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.ciy.plugin.YapiAndroidPlugin.iml" filepath="$PROJECT_DIR$/.idea/modules/com.ciy.plugin.YapiAndroidPlugin.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.ciy.plugin.YapiAndroidPlugin.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.ciy.plugin.YapiAndroidPlugin.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.ciy.plugin.YapiAndroidPlugin.test.iml" filepath="$PROJECT_DIR$/.idea/modules/com.ciy.plugin.YapiAndroidPlugin.test.iml" />
     </modules>
   </component>
 </project>

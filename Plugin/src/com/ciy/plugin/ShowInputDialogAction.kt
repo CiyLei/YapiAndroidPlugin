@@ -1,11 +1,14 @@
 package com.ciy.plugin
 
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.ciy.plugin.modle.ApiBean
 import com.ciy.plugin.modle.ApiInfoBean
+import com.ciy.plugin.modle.JsonSchemaBean
 import com.ciy.plugin.modle.ProjectInfoBean
 import com.ciy.plugin.ui.AnalysisApiListProgressDialog
 import com.ciy.plugin.ui.InputUrlDialog
 import com.ciy.plugin.ui.SelectApiDialog
+import com.google.gson.Gson
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
@@ -25,7 +28,7 @@ class ShowInputDialogAction : AnAction() {
         isEnabledInModalContext = true
     }
 
-    private val urlMap = HashMap<ApiInfoBean, PropertySpec>()
+    private val urlConstantMap = HashMap<ApiInfoBean, PropertySpec>()
 
     /**
      * 点击图标
@@ -70,7 +73,7 @@ class ShowInputDialogAction : AnAction() {
      * 生成源代码
      */
     fun generateSourceCode(rootDir: File, packName: String, apiInfoList: List<ApiInfoBean>) {
-        urlMap.clear()
+        urlConstantMap.clear()
         createURLConstant(rootDir, packName, apiInfoList)
     }
 
@@ -96,7 +99,7 @@ class ShowInputDialogAction : AnAction() {
             val property = PropertySpec.builder(propertyName, String::class.asTypeName(), KModifier.CONST)
                 .initializer("\"$${prefixProperty.name}${it.path}$${suffixProperty.name}\"")
                 .addKdoc(it.title).build()
-            urlMap[it] = property
+            urlConstantMap[it] = property
             urlConstantBuild.addProperty(property)
         }
         urlConstantBuild.addKdoc("Url常量存放类")
@@ -156,5 +159,81 @@ class ShowInputDialogAction : AnAction() {
             }
         }
         return defaultValue
+    }
+
+    companion object {
+        @JvmStatic
+        fun main(args: Array<String>) {
+        }
+
+        fun analysisJsonSchema(jsonSchema: JsonSchemaBean, name: String, cacheTypeList: ArrayList<TypeSpec>): Any? {
+            when (jsonSchema.type) {
+                // 对象
+                "object" -> {
+                    // 构造方法
+                    val constructorFunBuilder = FunSpec.constructorBuilder()
+                    // 所有字段
+                    val propertyList = ArrayList<PropertySpec>()
+                    // 循环所有字段
+                    for ((key, value) in jsonSchema.properties) {
+                        val result = analysisJsonSchema(value, key, cacheTypeList)
+                        if (result is PropertySpec) {
+                            constructorFunBuilder.addParameter(key, result.type).addKdoc(value.description ?: "")
+                            propertyList.add(result)
+                        } else if (result is TypeSpec) {
+                            val className = ClassName("", result.name!!)
+                            constructorFunBuilder.addParameter(key, className).addKdoc(value.description ?: "")
+                            propertyList.add(
+                                PropertySpec.builder(key, className).addKdoc(
+                                    value.description ?: ""
+                                ).initializer(key).build()
+                            )
+                        }
+                    }
+                    val typeBuilder = TypeSpec.classBuilder(captureName(name)).addModifiers(KModifier.DATA)
+                        .primaryConstructor(constructorFunBuilder.build()).addKdoc(jsonSchema.description ?: "")
+                    typeBuilder.addProperties(propertyList)
+                    val type = typeBuilder.build()
+                    cacheTypeList.add(0, type)
+                    return type
+                }
+                // 列表
+                "array" -> {
+                    val result = analysisJsonSchema(jsonSchema.items, "${captureName(name)}List", cacheTypeList)
+                    if (result is PropertySpec) {
+                        val listProperty = LIST.parameterizedBy(result.type)
+                        return PropertySpec.builder(name, listProperty).addKdoc(jsonSchema.description ?: "")
+                            .initializer(name).build()
+                    } else if (result is TypeSpec) {
+                        val listProperty = LIST.parameterizedBy(ClassName("", result.name!!))
+                        return PropertySpec.builder(name, listProperty).addKdoc(jsonSchema.description ?: "")
+                            .initializer(name).build()
+                    }
+                }
+                // 基本类型
+                "string", "integer", "boolean", "number" -> {
+                    return PropertySpec.builder(name, getType(jsonSchema.type)).initializer(name)
+                        .addKdoc(jsonSchema.description ?: "")
+                        .build()
+                }
+            }
+            return null
+        }
+
+        //首字母大写
+        fun captureName(name: String): String {
+            if (name.isNotEmpty()) {
+                return name.substring(0, 1).toUpperCase() + name.substring(1)
+            }
+            return name
+        }
+
+        fun getType(type: String): ClassName = when (type) {
+            "string" -> String::class.asTypeName()
+            "integer" -> Int::class.asTypeName()
+            "boolean" -> Boolean::class.asTypeName()
+            "number" -> Double::class.asTypeName()
+            else -> Any::class.asTypeName()
+        }
     }
 }
