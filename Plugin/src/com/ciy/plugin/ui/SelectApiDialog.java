@@ -28,6 +28,7 @@ public class SelectApiDialog extends JDialog {
     private JLabel lb;
     private JComboBox cbModule;
     private JTextField tfPack;
+    private JLabel lbTitle;
     private Project project;
     private ProjectInfoBean projectInfo;
     private SelectApiDialogListener listener;
@@ -51,6 +52,7 @@ public class SelectApiDialog extends JDialog {
         moduleList = Arrays.asList(ModuleManager.getInstance(project).getModules());
         catMenuBeanList = new ArrayList<>();
         apiList = new ArrayList<>();
+        lbTitle.setText(projectInfo.getName());
 
         buttonOK.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
