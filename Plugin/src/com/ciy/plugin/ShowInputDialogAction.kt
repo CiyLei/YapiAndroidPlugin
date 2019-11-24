@@ -6,6 +6,7 @@ import com.ciy.plugin.modle.ProjectInfoBean
 import com.ciy.plugin.ui.AnalysisApiListProgressDialog
 import com.ciy.plugin.ui.InputUrlDialog
 import com.ciy.plugin.ui.SelectApiDialog
+import com.ciy.plugin.ui.ShowErrorListDialog
 import com.ciy.plugin.utils.ApiServiceGenerate
 import com.ciy.plugin.utils.URLConstantGenerate
 import com.ciy.plugin.utils.URLConstantGenerate.propertyMap
@@ -16,8 +17,6 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.rootManager
 import com.intellij.openapi.vfs.newvfs.impl.VirtualDirectoryImpl
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.TypeSpec
 import java.io.File
 
 /**
@@ -27,6 +26,14 @@ class ShowInputDialogAction : AnAction() {
 
     init {
         isEnabledInModalContext = true
+    }
+
+    companion object {
+        /**
+         * 生成代码的错误列表
+         */
+        @JvmStatic
+        val generateSourceCodeErrorList = ArrayList<Throwable>()
     }
 
     /**
@@ -63,7 +70,15 @@ class ShowInputDialogAction : AnAction() {
                 if (!rootDir.exists()) {
                     rootDir.mkdirs()
                 }
-                generateSourceCode(rootDir, packName, it)
+                generateSourceCodeErrorList.clear()
+                try {
+                    generateSourceCode(rootDir, packName, it)
+                } catch (e: Throwable) {
+                    generateSourceCodeErrorList.add(e)
+                }
+                if (generateSourceCodeErrorList.isNotEmpty()) {
+                    ShowErrorListDialog(generateSourceCodeErrorList).isVisible = true
+                }
             }
         }).isVisible = true
     }
@@ -83,12 +98,4 @@ class ShowInputDialogAction : AnAction() {
         apiServiceFile.writeTo(rootDir)
     }
 
-
-
-    companion object {
-        @JvmStatic
-        fun main(args: Array<String>) {
-            TypeSpec.classBuilder("T").addModifiers(KModifier.DATA)
-        }
-    }
 }
