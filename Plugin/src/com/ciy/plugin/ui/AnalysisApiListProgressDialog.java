@@ -59,7 +59,7 @@ public class AnalysisApiListProgressDialog extends JDialog {
      * @param apiBean
      */
     private void startAnalysis(ApiBean apiBean) {
-        if (apiBean != null && apiListIndex < 10) {
+        if (apiBean != null) {
             int id = apiBean.get_id();
             HttpUrl url = HttpUrl.parse(Constants.yapiUrl + "/api/interface/get").newBuilder()
                     .addQueryParameter("id", String.valueOf(id))

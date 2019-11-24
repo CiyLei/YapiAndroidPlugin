@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import java.io.File
+import java.io.Serializable
 
 object ResponseModelGenerate {
 
@@ -62,11 +63,11 @@ object ResponseModelGenerate {
             "object" -> {
                 if (jsonSchema.properties.isEmpty()) {
                     // 没有字段的话，视为Any
-                    return PropertySpec.builder(name, Any::class.asTypeName()).addKdoc(jsonSchema.description ?: "")
-                        .initializer(name).build()
+                    return PropertySpec.builder(name, Any::class.asTypeName().copy(true)).addKdoc(jsonSchema.description ?: "")
+                        .initializer("null").build()
                 }
                 // 构造方法
-                val constructorFunBuilder = FunSpec.constructorBuilder()
+//                val constructorFunBuilder = FunSpec.constructorBuilder()
                 // 所有字段
                 val propertyList = ArrayList<PropertySpec>()
                 // 循环所有字段
@@ -74,21 +75,22 @@ object ResponseModelGenerate {
                     // 如果有多个类 那么下一个类名前面加上一个类的名称
                     val result = analysisJsonSchema(value, key, cacheTypeList, "$hostClassName${captureName(name)}")
                     if (result is PropertySpec) {
-                        constructorFunBuilder.addParameter(key, result.type).addKdoc(value.description ?: "")
+//                        constructorFunBuilder.addParameter(key, result.type).addKdoc(value.description ?: "")
                         propertyList.add(result)
                     } else if (result is TypeSpec) {
                         val className = ClassName("", result.name!!)
-                        constructorFunBuilder.addParameter(key, className).addKdoc(value.description ?: "")
+//                        constructorFunBuilder.addParameter(key, className).addKdoc(value.description ?: "")
                         propertyList.add(
-                            PropertySpec.builder(key, className).addKdoc(
+                            PropertySpec.builder(key, className.copy(true)).addKdoc(
                                 value.description ?: ""
-                            ).initializer(key).mutable().build()
+                            ).initializer("null").mutable().build()
                         )
                     }
                 }
-                val typeBuilder = TypeSpec.classBuilder("$hostClassName${captureName(name)}").addModifiers(KModifier.DATA)
-                    .primaryConstructor(constructorFunBuilder.build()).addKdoc(jsonSchema.description ?: "")
-                typeBuilder.addProperties(propertyList)
+//                val typeBuilder = TypeSpec.classBuilder("$hostClassName${captureName(name)}").addModifiers(KModifier.DATA)
+//                    .primaryConstructor(constructorFunBuilder.build()).addKdoc(jsonSchema.description ?: "")
+                val typeBuilder = TypeSpec.classBuilder("$hostClassName${captureName(name)}").addKdoc(jsonSchema.description ?: "")
+                typeBuilder.addProperties(propertyList).addSuperinterface(Serializable::class)
                 val type = typeBuilder.build()
                 cacheTypeList.add(0, type)
                 return type
@@ -98,17 +100,17 @@ object ResponseModelGenerate {
                 val result = analysisJsonSchema(jsonSchema.items, captureName(name), cacheTypeList, hostClassName)
                 if (result is PropertySpec) {
                     val listProperty = LIST.parameterizedBy(result.type)
-                    return PropertySpec.builder(name, listProperty).addKdoc(jsonSchema.description ?: "")
-                        .mutable().initializer(name).build()
+                    return PropertySpec.builder(name, listProperty.copy(true)).addKdoc(jsonSchema.description ?: "")
+                        .mutable().initializer("null").build()
                 } else if (result is TypeSpec) {
                     val listProperty = LIST.parameterizedBy(ClassName("", result.name!!))
-                    return PropertySpec.builder(name, listProperty).addKdoc(jsonSchema.description ?: "")
-                        .mutable().initializer(name).build()
+                    return PropertySpec.builder(name, listProperty.copy(true)).addKdoc(jsonSchema.description ?: "")
+                        .mutable().initializer("null").build()
                 }
             }
             // 基本类型
             "string", "integer", "boolean", "number" -> {
-                return PropertySpec.builder(name, getType(jsonSchema.type)).initializer(name)
+                return PropertySpec.builder(name, getType(jsonSchema.type).copy(true)).initializer("null")
                     .addKdoc(jsonSchema.description ?: "").mutable()
                     .build()
             }
