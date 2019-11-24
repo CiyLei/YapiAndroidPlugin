@@ -17,6 +17,9 @@ object RequestBodyModelGenerate {
             val jsonSchema = Gson().fromJson(apiInfo.req_body_other, JsonSchemaBean::class.java)
             if (jsonSchema.type == "object") {
                 ResponseModelGenerate.analysisJsonSchema(jsonSchema, className, cacheTypeList)
+                if (cacheTypeList.isEmpty()) {
+                    return Pair(null, false)
+                }
                 val requestBodyFileBuilder = FileSpec.builder(packName, className)
                 // 普通类
                 cacheTypeList.forEach {

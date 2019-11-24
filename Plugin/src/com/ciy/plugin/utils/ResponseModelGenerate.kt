@@ -44,6 +44,9 @@ object ResponseModelGenerate {
             if (jsonSchema != null) {
                 // response 只考虑只有 object 的情况
                 analysisJsonSchema(jsonSchema, className, cacheTypeList)
+                if (cacheTypeList.isEmpty()) {
+                    return null
+                }
                 val responseFileBuilder = FileSpec.builder(packName, className)
                 cacheTypeList.forEach {
                     responseFileBuilder.addType(it)
