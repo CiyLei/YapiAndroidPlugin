@@ -39,17 +39,32 @@ object ApiServiceGenerate {
                 }
             }
             // 传参模型
-            val (requestBodyFile, isList) = RequestBodyModelGenerate.createRequestBodyModel(ResponseModelGenerate.captureName("${urlName}ReqModel")
-                , rootDir, modelPackName, it)
-            if (requestBodyFile != null) {
-                var requestBodyType = ClassName(requestBodyFile.packageName, requestBodyFile.name)
-                val bodyAnnotationType = ClassName("retrofit2.http", "Body")
-                if (!isList) {
-                    funSpecBuilder.addParameter(ParameterSpec.builder("parameter",requestBodyType.copy(true))
-                        .defaultValue("null").addAnnotation(bodyAnnotationType).build())
-                } else {
-                    funSpecBuilder.addParameter(ParameterSpec.builder("parameter",LIST.parameterizedBy(requestBodyType).copy(true))
-                        .defaultValue("null").addAnnotation(bodyAnnotationType).build())
+            if (it.method == "GET") {
+                it.req_query.forEach { req_it ->
+                    val queryAnnotationType = ClassName("retrofit2.http", "Query")
+                    val queryAnnotation = AnnotationSpec.builder(queryAnnotationType).addMember("%S", req_it.name).build()
+                    // 必传
+                    val required = req_it.required == "1"
+                    funSpecBuilder.addParameter(ParameterSpec.builder(req_it.name, String::class.asTypeName().copy(!required))
+                        .addAnnotation(queryAnnotation).addKdoc(req_it.desc).apply {
+                            if (!required) {
+                                defaultValue("null")
+                            }
+                        }.build())
+                }
+            } else {
+                val (requestBodyFile, isList) = RequestBodyModelGenerate.createRequestBodyModel(ResponseModelGenerate.captureName("${urlName}ReqModel")
+                    , rootDir, modelPackName, it)
+                if (requestBodyFile != null) {
+                    val requestBodyType = ClassName(requestBodyFile.packageName, requestBodyFile.name)
+                    val bodyAnnotationType = ClassName("retrofit2.http", "Body")
+                    if (!isList) {
+                        funSpecBuilder.addParameter(ParameterSpec.builder("parameter",requestBodyType.copy(true))
+                            .defaultValue("null").addAnnotation(bodyAnnotationType).build())
+                    } else {
+                        funSpecBuilder.addParameter(ParameterSpec.builder("parameter",LIST.parameterizedBy(requestBodyType).copy(true))
+                            .defaultValue("null").addAnnotation(bodyAnnotationType).build())
+                    }
                 }
             }
             apiServiceBuilder.addFunction(funSpecBuilder.build())
