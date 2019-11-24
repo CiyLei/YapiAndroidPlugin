@@ -8,25 +8,38 @@ import java.io.File
 
 object RequestBodyModelGenerate {
 
-    fun createRequestBodyModel(className: String, rootDir: File, packName: String, apiInfo: ApiInfoBean): FileSpec? {
+    /**
+     * @return Boolean 是否是List
+     */
+    fun createRequestBodyModel(className: String, rootDir: File, packName: String, apiInfo: ApiInfoBean): Pair<FileSpec?, Boolean> {
         if (apiInfo.req_body_is_json_schema) {
             val cacheTypeList = ArrayList<TypeSpec>()
             val jsonSchema = Gson().fromJson(apiInfo.req_body_other, JsonSchemaBean::class.java)
-            val req = ResponseModelGenerate.analysisJsonSchema(jsonSchema, className, cacheTypeList)
-            val requestBodyFileBuilder = FileSpec.builder(packName, className)
-            if (req is TypeSpec) {
+            if (jsonSchema.type == "object") {
+                ResponseModelGenerate.analysisJsonSchema(jsonSchema, className, cacheTypeList)
+                val requestBodyFileBuilder = FileSpec.builder(packName, className)
                 // 普通类
                 cacheTypeList.forEach {
                     requestBodyFileBuilder.addType(it)
                 }
-                return requestBodyFileBuilder.build().apply {
+                return Pair(requestBodyFileBuilder.build().apply {
                     ResponseModelGenerate.writeTo(this, rootDir, cacheTypeList)
+                }, false)
+            } else if (jsonSchema.type == "array") {
+                // 不支持List套List
+                if (jsonSchema.items.type == "object") {
+                    ResponseModelGenerate.analysisJsonSchema(jsonSchema.items, className, cacheTypeList)
+                    val requestBodyFileBuilder = FileSpec.builder(packName, className)
+                    // 普通类
+                    cacheTypeList.forEach {
+                        requestBodyFileBuilder.addType(it)
+                    }
+                    return Pair(requestBodyFileBuilder.build().apply {
+                        ResponseModelGenerate.writeTo(this, rootDir, cacheTypeList)
+                    }, true)
                 }
-            } else if (req is PropertySpec && req.type.toString() == LIST.toString()) {
-                // List
-                println(1)
             }
         }
-        return null
+        return Pair(null, false)
     }
 }

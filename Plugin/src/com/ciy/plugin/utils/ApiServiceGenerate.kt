@@ -39,13 +39,18 @@ object ApiServiceGenerate {
                 }
             }
             // 传参模型
-            val requestBodyFile = RequestBodyModelGenerate.createRequestBodyModel(ResponseModelGenerate.captureName("${urlName}ReqModel")
+            val (requestBodyFile, isList) = RequestBodyModelGenerate.createRequestBodyModel(ResponseModelGenerate.captureName("${urlName}ReqModel")
                 , rootDir, modelPackName, it)
             if (requestBodyFile != null) {
-                val requestBodyType = ClassName(requestBodyFile.packageName, requestBodyFile.name)
+                var requestBodyType = ClassName(requestBodyFile.packageName, requestBodyFile.name)
                 val bodyAnnotationType = ClassName("retrofit2.http", "Body")
-                funSpecBuilder.addParameter(ParameterSpec.builder("parameter",requestBodyType.copy(true))
-                    .defaultValue("null").addAnnotation(bodyAnnotationType).build())
+                if (!isList) {
+                    funSpecBuilder.addParameter(ParameterSpec.builder("parameter",requestBodyType.copy(true))
+                        .defaultValue("null").addAnnotation(bodyAnnotationType).build())
+                } else {
+                    funSpecBuilder.addParameter(ParameterSpec.builder("parameter",LIST.parameterizedBy(requestBodyType).copy(true))
+                        .defaultValue("null").addAnnotation(bodyAnnotationType).build())
+                }
             }
             apiServiceBuilder.addFunction(funSpecBuilder.build())
         }
