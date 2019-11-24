@@ -16,6 +16,8 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.rootManager
 import com.intellij.openapi.vfs.newvfs.impl.VirtualDirectoryImpl
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.TypeSpec
 import java.io.File
 
 /**
@@ -86,6 +88,7 @@ class ShowInputDialogAction : AnAction() {
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
+            TypeSpec.classBuilder("T").addModifiers(KModifier.DATA)
         }
     }
 }

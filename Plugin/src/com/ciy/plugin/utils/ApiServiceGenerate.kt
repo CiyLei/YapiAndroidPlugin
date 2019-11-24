@@ -19,9 +19,9 @@ object ApiServiceGenerate {
         apiInfoList.forEach {
             val urlName = url2Name(it.path)
             // 创建返回值模型
-            val responsePackName = "$packName.modle"
-            val responseFile = ResponseModleGenerate.createResponseModle(ResponseModleGenerate.captureName(urlName)
-                , rootDir, responsePackName, it)
+            val modelPackName = "$packName.model"
+            val responseFile = ResponseModelGenerate.createResponseModel(ResponseModelGenerate.captureName("${urlName}ResModel")
+                , rootDir, modelPackName, it)
             var responseType = Any::class.asTypeName()
             if (responseFile != null) {
 //                responseFile.writeTo(rootDir)
@@ -37,6 +37,15 @@ object ApiServiceGenerate {
                     propertyMap.add(itU)
                     funSpecBuilder.addAnnotation(AnnotationSpec.builder(methodClass).addMember(CodeBlock.of(itU)).build())
                 }
+            }
+            // 传参模型
+            val requestBodyFile = RequestBodyModelGenerate.createRequestBodyModel(ResponseModelGenerate.captureName("${urlName}ReqModel")
+                , rootDir, modelPackName, it)
+            if (requestBodyFile != null) {
+                val requestBodyType = ClassName(requestBodyFile.packageName, requestBodyFile.name)
+                val bodyAnnotationType = ClassName("retrofit2.http", "Body")
+                funSpecBuilder.addParameter(ParameterSpec.builder("parameter",requestBodyType.copy(true))
+                    .defaultValue("null").addAnnotation(bodyAnnotationType).build())
             }
             apiServiceBuilder.addFunction(funSpecBuilder.build())
         }

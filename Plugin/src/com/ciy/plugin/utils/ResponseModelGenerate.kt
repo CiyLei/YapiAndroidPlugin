@@ -7,14 +7,14 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import java.io.File
 
-object ResponseModleGenerate {
+object ResponseModelGenerate {
 
     /**
      * 数据模型里面如果有多个类的话
      * 在类中会import 主类以外的类 从而导致报错
      * 不知道怎么处理，里面就手动去除一下然后写入文件
      */
-    private fun writeTo(sourceFile: FileSpec, rootDir: File, cacheTypeList: List<TypeSpec>) {
+    fun writeTo(sourceFile: FileSpec, rootDir: File, cacheTypeList: List<TypeSpec>) {
         var sourceCode = sourceFile.toString()
         for (i in 1 until cacheTypeList.size) {
             sourceCode = sourceCode.replace("import ${cacheTypeList[i].name}\n", "")
@@ -36,10 +36,11 @@ object ResponseModleGenerate {
     /**
      * 创建模型类
      */
-    fun createResponseModle(className: String, rootDir: File, packName: String, apiInfo: ApiInfoBean): FileSpec? {
+    fun createResponseModel(className: String, rootDir: File, packName: String, apiInfo: ApiInfoBean): FileSpec? {
         if (apiInfo.res_body_is_json_schema) {
             val cacheTypeList = ArrayList<TypeSpec>()
             val jsonSchema = Gson().fromJson(apiInfo.res_body, JsonSchemaBean::class.java)
+            // response 只考虑只有 object 的情况
             analysisJsonSchema(jsonSchema, className, cacheTypeList)
             val responseFileBuilder = FileSpec.builder(packName, className)
             cacheTypeList.forEach {
@@ -55,7 +56,7 @@ object ResponseModleGenerate {
     /**
      * 分析JsonSchema
      */
-    private fun analysisJsonSchema(jsonSchema: JsonSchemaBean, name: String, cacheTypeList: ArrayList<TypeSpec>, hostClassName: String = ""): Any? {
+    fun analysisJsonSchema(jsonSchema: JsonSchemaBean, name: String, cacheTypeList: ArrayList<TypeSpec>, hostClassName: String = ""): Any? {
         when (jsonSchema.type) {
             // 对象
             "object" -> {
