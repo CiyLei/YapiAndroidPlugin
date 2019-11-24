@@ -41,14 +41,16 @@ object ResponseModelGenerate {
         if (apiInfo.res_body_is_json_schema) {
             val cacheTypeList = ArrayList<TypeSpec>()
             val jsonSchema = Gson().fromJson(apiInfo.res_body, JsonSchemaBean::class.java)
-            // response 只考虑只有 object 的情况
-            analysisJsonSchema(jsonSchema, className, cacheTypeList)
-            val responseFileBuilder = FileSpec.builder(packName, className)
-            cacheTypeList.forEach {
-                responseFileBuilder.addType(it)
-            }
-            return responseFileBuilder.build().apply {
-                writeTo(this, rootDir, cacheTypeList)
+            if (jsonSchema != null) {
+                // response 只考虑只有 object 的情况
+                analysisJsonSchema(jsonSchema, className, cacheTypeList)
+                val responseFileBuilder = FileSpec.builder(packName, className)
+                cacheTypeList.forEach {
+                    responseFileBuilder.addType(it)
+                }
+                return responseFileBuilder.build().apply {
+                    writeTo(this, rootDir, cacheTypeList)
+                }
             }
         }
         return null
@@ -58,6 +60,9 @@ object ResponseModelGenerate {
      * 分析JsonSchema
      */
     fun analysisJsonSchema(jsonSchema: JsonSchemaBean, name: String, cacheTypeList: ArrayList<TypeSpec>, hostClassName: String = ""): Any? {
+        if (jsonSchema == null || jsonSchema.type == null) {
+            return null
+        }
         when (jsonSchema.type) {
             // 对象
             "object" -> {
@@ -109,7 +114,7 @@ object ResponseModelGenerate {
                 }
             }
             // 基本类型
-            "string", "integer", "boolean", "number" -> {
+            "string", "integer", "boolean", "number", "String", "Integer", "Boolean", "Number" -> {
                 return PropertySpec.builder(name, getType(jsonSchema.type).copy(true)).initializer("null")
                     .addKdoc(jsonSchema.description ?: "").mutable()
                     .build()
@@ -133,9 +138,13 @@ object ResponseModelGenerate {
      */
     private fun getType(type: String): ClassName = when (type) {
         "string" -> String::class.asTypeName()
+        "String" -> String::class.asTypeName()
         "integer" -> Int::class.asTypeName()
+        "Integer" -> Int::class.asTypeName()
         "boolean" -> Boolean::class.asTypeName()
+        "Boolean" -> Boolean::class.asTypeName()
         "number" -> Double::class.asTypeName()
+        "Number" -> Double::class.asTypeName()
         else -> Any::class.asTypeName()
     }
 }

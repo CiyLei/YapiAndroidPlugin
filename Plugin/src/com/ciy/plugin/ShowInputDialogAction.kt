@@ -74,6 +74,7 @@ class ShowInputDialogAction : AnAction() {
                 try {
                     generateSourceCode(rootDir, packName, it)
                 } catch (e: Throwable) {
+                    e.printStackTrace()
                     generateSourceCodeErrorList.add(e)
                 }
                 if (generateSourceCodeErrorList.isNotEmpty()) {

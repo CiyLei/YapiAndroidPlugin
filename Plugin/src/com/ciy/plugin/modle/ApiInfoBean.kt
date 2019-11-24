@@ -11,7 +11,7 @@ data class ApiInfoBean(
     val index: Int,
     val markdown: String,
     val method: String,
-    val path: String,
+    var path: String,
     val project_id: Int,
     val req_body_form: List<ApiInfoBody>,
     val req_body_is_json_schema: Boolean,

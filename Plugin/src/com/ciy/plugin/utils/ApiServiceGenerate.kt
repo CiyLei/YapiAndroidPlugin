@@ -71,7 +71,8 @@ object ApiServiceGenerate {
                 }
                 apiServiceBuilder.addFunction(funSpecBuilder.build())
             } catch (e: Throwable) {
-                ShowInputDialogAction.generateSourceCodeErrorList.add(e)
+                e.printStackTrace()
+                ShowInputDialogAction.generateSourceCodeErrorList.add(Throwable("${it.path} $e"))
             }
         }
         return FileSpec.builder(packName, className).addType(apiServiceBuilder.build())

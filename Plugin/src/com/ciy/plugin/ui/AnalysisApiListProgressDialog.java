@@ -77,6 +77,11 @@ public class AnalysisApiListProgressDialog extends JDialog {
                             }.getType());
                     lb.setText(apiBean.getTitle());
                     pb.setValue(apiListIndex);
+                    // 不支持path里面带.
+                    String[] split = apiInfoBean.getData().getPath().split("\\.");
+                    if (split.length > 1) {
+                        apiInfoBean.getData().setPath(split[0]);
+                    }
                     apiInfoBeans.add(apiInfoBean.getData());
                     startAnalysis(nextApi());
                 }

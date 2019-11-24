@@ -12,7 +12,7 @@ object RequestBodyModelGenerate {
      * @return Boolean 是否是List
      */
     fun createRequestBodyModel(className: String, rootDir: File, packName: String, apiInfo: ApiInfoBean): Pair<FileSpec?, Boolean> {
-        if (apiInfo.req_body_is_json_schema) {
+        if (apiInfo.req_body_is_json_schema && apiInfo.req_body_other != null) {
             val cacheTypeList = ArrayList<TypeSpec>()
             val jsonSchema = Gson().fromJson(apiInfo.req_body_other, JsonSchemaBean::class.java)
             if (jsonSchema.type == "object") {
