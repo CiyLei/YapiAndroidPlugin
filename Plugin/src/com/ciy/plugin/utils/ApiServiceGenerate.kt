@@ -87,7 +87,7 @@ object ApiServiceGenerate {
      * url转变量名称
      */
     fun url2Name(url:String): String {
-        var result = url
+        var result = url.replace(".", "_")
         if (result.startsWith("/")) {
             result = result.substring(1, result.length)
         }

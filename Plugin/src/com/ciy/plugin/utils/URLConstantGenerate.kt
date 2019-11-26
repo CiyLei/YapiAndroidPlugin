@@ -22,7 +22,7 @@ object URLConstantGenerate {
         )
         apiInfoList.forEach {
             // 添加字段名称
-            var propertyName = it.path.replace("/", "_").toUpperCase()
+            var propertyName = it.path.replace("/", "_").replace(".", "_").toUpperCase()
             if (propertyName.startsWith("_")) {
                 propertyName = propertyName.substring(1)
             }
