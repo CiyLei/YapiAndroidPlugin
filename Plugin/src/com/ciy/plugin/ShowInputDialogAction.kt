@@ -34,6 +34,12 @@ class ShowInputDialogAction : AnAction() {
          */
         @JvmStatic
         val generateSourceCodeErrorList = ArrayList<Throwable>()
+
+        @JvmStatic
+        val urlConstantClassName = "URLConstant"
+
+        @JvmStatic
+        val apiSeriviceClassName = "ApiService"
     }
 
     /**
@@ -90,11 +96,9 @@ class ShowInputDialogAction : AnAction() {
     fun generateSourceCode(rootDir: File, packName: String, apiInfoList: List<ApiInfoBean>) {
         propertyMap.clear()
         // 生成 URLConstant.kt
-        val urlConstantClassName = "URLConstant"
         val urlConstantFile = URLConstantGenerate.createURLConstant(urlConstantClassName, rootDir, packName, apiInfoList)
         urlConstantFile.writeTo(rootDir)
         // 生成ApiService.kt
-        val apiSeriviceClassName = "ApiService"
         val apiServiceFile = ApiServiceGenerate.createApiService(apiSeriviceClassName, rootDir, packName, urlConstantFile, apiInfoList)
         apiServiceFile.writeTo(rootDir)
     }

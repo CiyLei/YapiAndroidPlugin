@@ -1,6 +1,7 @@
 package com.ciy.plugin.ui;
 
 import com.ciy.plugin.Constants;
+import com.ciy.plugin.ShowInputDialogAction;
 import com.ciy.plugin.modle.*;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -39,6 +40,7 @@ public class SelectApiDialog extends JDialog {
     private JTextField tfPack;
     private JLabel lbTitle;
     private JButton btnReverse;
+    private JButton btnSelectAll;
     private Project project;
     private ProjectInfoBean projectInfo;
     private SelectApiDialogListener listener;
@@ -76,11 +78,21 @@ public class SelectApiDialog extends JDialog {
             }
         });
 
-        btnReverse.addActionListener(new AbstractAction() {
+        btnReverse.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 apiList.stream().forEach(it -> {
                     it.setSelect(!it.getSelect());
+                });
+                refreshListData();
+            }
+        });
+
+        btnSelectAll.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                apiList.stream().forEach(it -> {
+                    it.setSelect(true);
                 });
                 refreshListData();
             }
@@ -183,7 +195,8 @@ public class SelectApiDialog extends JDialog {
         Module selectModule = moduleList.get(cbModule.getSelectedIndex());
         if (selectModule != null) {
             String pack = tfPack.getText().replace(".", "/");
-            VirtualFile apiServiceFile = selectModule.getModuleFile().getParent().findFileByRelativePath("src/main/java/" + pack + "/URLConstant.kt");
+            VirtualFile apiServiceFile = selectModule.getModuleFile().getParent().findFileByRelativePath("src/main/java/" +
+                    pack + "/" + ShowInputDialogAction.Companion.getUrlConstantClassName() + ".kt");
             if (apiServiceFile != null && apiServiceFile.exists()) {
                 // URLConstant 存在读取里面的url
                 try {
@@ -213,7 +226,7 @@ public class SelectApiDialog extends JDialog {
             } else {
                 // URLConstant 不存在则全选
                 apiList.forEach(it -> {
-                    it.setSelect(true);
+                    it.setSelect(false);
                 });
             }
             refreshListData();
