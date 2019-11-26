@@ -4,12 +4,13 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ShowErrorListDialog extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
-    private JList lsError;
+    private JTextArea taError;
     private List<Throwable> errorList;
 
     public ShowErrorListDialog(List<Throwable> errorList) {
@@ -50,7 +51,7 @@ public class ShowErrorListDialog extends JDialog {
             }
         }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-        lsError.setListData(errorList.toArray());
+        taError.setText(errorList.stream().map(it -> (it.toString() + "\n\n")).collect(Collectors.joining()));
     }
 
     private void onOK() {

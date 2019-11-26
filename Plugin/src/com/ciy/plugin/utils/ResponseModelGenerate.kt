@@ -117,8 +117,8 @@ object ResponseModelGenerate {
                 }
             }
             // 基本类型
-            "string", "integer", "boolean", "number", "String", "Integer", "Boolean", "Number" -> {
-                return PropertySpec.builder(name, getType(jsonSchema.type).copy(true)).initializer("null")
+            else -> {
+                return PropertySpec.builder(name, getType(jsonSchema.type.toString()).copy(true)).initializer("null")
                     .addKdoc(jsonSchema.description ?: "").mutable()
                     .build()
             }
