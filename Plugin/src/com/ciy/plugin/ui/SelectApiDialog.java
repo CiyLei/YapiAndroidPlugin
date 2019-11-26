@@ -7,18 +7,27 @@ import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.newvfs.impl.VirtualDirectoryImpl;
+import com.squareup.kotlinpoet.FileSpec;
 import okhttp3.*;
+import org.apache.maven.model.FileSet;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.event.*;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class SelectApiDialog extends JDialog {
     private JPanel contentPane;
@@ -29,6 +38,7 @@ public class SelectApiDialog extends JDialog {
     private JComboBox cbModule;
     private JTextField tfPack;
     private JLabel lbTitle;
+    private JButton btnReverse;
     private Project project;
     private ProjectInfoBean projectInfo;
     private SelectApiDialogListener listener;
@@ -63,6 +73,23 @@ public class SelectApiDialog extends JDialog {
         buttonCancel.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 onCancel();
+            }
+        });
+
+        btnReverse.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                apiList.stream().forEach(it -> {
+                    it.setSelect(!it.getSelect());
+                });
+                refreshListData();
+            }
+        });
+
+        tfPack.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                readSelectApi();
             }
         });
 
@@ -140,12 +167,57 @@ public class SelectApiDialog extends JDialog {
                 if (apiListBean.getErrcode() == 0 && apiListBean.getData() != null) {
                     apiList.clear();
                     apiList.addAll(apiListBean.getData().getList());
+                    readSelectApi();
                     refreshListData();
                 } else {
                     lb.setText(apiListBean.getErrmsg());
                 }
             }
         });
+    }
+
+    /**
+     * 读取已经选择的api
+     */
+    private void readSelectApi() {
+        Module selectModule = moduleList.get(cbModule.getSelectedIndex());
+        if (selectModule != null) {
+            String pack = tfPack.getText().replace(".", "/");
+            VirtualFile apiServiceFile = selectModule.getModuleFile().getParent().findFileByRelativePath("src/main/java/" + pack + "/URLConstant.kt");
+            if (apiServiceFile != null && apiServiceFile.exists()) {
+                // URLConstant 存在读取里面的url
+                try {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(apiServiceFile.getInputStream()));
+                    StringBuilder sb = new StringBuilder();
+                    String len = "";
+                    while ((len = br.readLine()) != null) {
+                        sb.append(len);
+                    }
+                    String sourceText = sb.toString();
+                    if (!sourceText.isEmpty()) {
+                        Pattern pattern = Pattern.compile("\\$PREFIX(.+?)\\$SUFFIX");
+                        Matcher matcher = pattern.matcher(sourceText);
+                        List<String> urlList = new ArrayList<>();
+                        while (matcher.find()) {
+                            if (matcher.group(1) != null) {
+                                urlList.add(matcher.group(1));
+                            }
+                        }
+                        apiList.stream().forEach(it -> {
+                            it.setSelect(urlList.contains(it.getPath()));
+                        });
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                // URLConstant 不存在则全选
+                apiList.forEach(it -> {
+                    it.setSelect(true);
+                });
+            }
+            refreshListData();
+        }
     }
 
     /**
@@ -156,11 +228,6 @@ public class SelectApiDialog extends JDialog {
         catMenuBeanList.forEach(it -> {
             listData.add(it.getName());
             listData.addAll(Arrays.asList(apiList.stream().filter(it2 -> it2.getCatid() == it.get_id()).toArray()));
-            listData.forEach(it2 -> {
-                if (it2 instanceof ApiBean) {
-                    ((ApiBean) it2).setSelect(true);
-                }
-            });
         });
         lsApiList.setListData(listData.toArray());
         lsApiList.setCellRenderer(new SelectApiCellRenderer());
