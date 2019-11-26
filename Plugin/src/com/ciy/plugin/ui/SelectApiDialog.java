@@ -3,6 +3,7 @@ package com.ciy.plugin.ui;
 import com.ciy.plugin.Constants;
 import com.ciy.plugin.ShowInputDialogAction;
 import com.ciy.plugin.modle.*;
+import com.ciy.plugin.utils.URLConstantGenerate;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.module.Module;
@@ -208,7 +209,8 @@ public class SelectApiDialog extends JDialog {
                     }
                     String sourceText = sb.toString();
                     if (!sourceText.isEmpty()) {
-                        Pattern pattern = Pattern.compile("\\$PREFIX(.+?)\\$SUFFIX");
+                        Pattern pattern = Pattern.compile("\\$" + URLConstantGenerate.INSTANCE.getPrefixPropertyName() +
+                                "(.+?)\\$" + URLConstantGenerate.INSTANCE.getSuffixPropertyName());
                         Matcher matcher = pattern.matcher(sourceText);
                         List<String> urlList = new ArrayList<>();
                         while (matcher.find()) {

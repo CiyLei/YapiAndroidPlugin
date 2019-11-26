@@ -6,6 +6,9 @@ import java.io.File
 
 object URLConstantGenerate {
 
+    val prefixPropertyName = "PREFIX"
+    val suffixPropertyName = "SUFFIX"
+
     val propertyMap = HashMap<ApiInfoBean, PropertySpec>()
 
     /**
@@ -45,8 +48,6 @@ object URLConstantGenerate {
         className: String,
         urlConstantBuild: TypeSpec.Builder
     ): Pair<PropertySpec, PropertySpec> {
-        val prefixPropertyName = "PREFIX"
-        val suffixPropertyName = "SUFFIX"
         val prefixPropertyValue =
             getClassPropertyValue(getClassFile(rootDir, packName, "$className.kt"), prefixPropertyName, "\"\"")
         val suffixPropertyValue =
