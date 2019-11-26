@@ -231,20 +231,22 @@ public class SelectApiDialog extends JDialog {
         });
         lsApiList.setListData(listData.toArray());
         lsApiList.setCellRenderer(new SelectApiCellRenderer());
-        lsApiList.addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                // 每选择一次，就会触发2次这个回调，这个getValueIsAdjusting能控制只触发后一次
-                if (e.getValueIsAdjusting()) {
-                    // 选择位置
-                    int selectIndex = lsApiList.getSelectedIndex();
-                    Object data = listData.get(selectIndex);
-                    if (data instanceof ApiBean) {
-                        ((ApiBean) data).setSelect(!((ApiBean) data).getSelect());
+        if (lsApiList.getListSelectionListeners().length == 0) {
+            lsApiList.addListSelectionListener(new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    // 每选择一次，就会触发2次这个回调，这个getValueIsAdjusting能控制只触发后一次
+                    if (e.getValueIsAdjusting()) {
+                        // 选择位置
+                        int selectIndex = lsApiList.getSelectedIndex();
+                        Object data = listData.get(selectIndex);
+                        if (data instanceof ApiBean) {
+                            ((ApiBean) data).setSelect(!((ApiBean) data).getSelect());
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     /**
