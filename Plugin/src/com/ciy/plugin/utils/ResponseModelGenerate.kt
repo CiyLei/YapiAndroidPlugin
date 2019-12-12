@@ -1,5 +1,6 @@
 package com.ciy.plugin.utils
 
+import a.k.it
 import com.ciy.plugin.modle.ApiInfoBean
 import com.ciy.plugin.modle.JsonSchemaBean
 import com.google.gson.Gson
@@ -39,20 +40,25 @@ object ResponseModelGenerate {
      */
     fun createResponseModel(className: String, rootDir: File, packName: String, apiInfo: ApiInfoBean): FileSpec? {
         if (apiInfo.res_body_is_json_schema) {
-            val cacheTypeList = ArrayList<TypeSpec>()
             val jsonSchema = Gson().fromJson(apiInfo.res_body, JsonSchemaBean::class.java)
-            if (jsonSchema != null) {
-                // response 只考虑只有 object 的情况
-                analysisJsonSchema(jsonSchema, className, cacheTypeList)
-                if (cacheTypeList.isEmpty()) {
-                    return null
-                }
-                val responseFileBuilder = FileSpec.builder(packName, className)
-                cacheTypeList.forEach {
-                    responseFileBuilder.addType(it)
-                }
-                return responseFileBuilder.build().apply {
-                    writeTo(this, rootDir, cacheTypeList)
+            if (jsonSchema?.properties != null) {
+                for ((k, v) in jsonSchema.properties) {
+                    // 只分析data，因为后面会套到BaseResponse中
+                    if (k == "data") {
+                        val cacheTypeList = ArrayList<TypeSpec>()
+                        // response 只考虑只有 object 的情况
+                        analysisJsonSchema(v, className, cacheTypeList)
+                        if (cacheTypeList.isEmpty()) {
+                            return null
+                        }
+                        val responseFileBuilder = FileSpec.builder(packName, className)
+                        cacheTypeList.forEach {
+                            responseFileBuilder.addType(it)
+                        }
+                        return responseFileBuilder.build().apply {
+                            writeTo(this, rootDir, cacheTypeList)
+                        }
+                    }
                 }
             }
         }

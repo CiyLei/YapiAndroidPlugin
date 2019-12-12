@@ -8,6 +8,7 @@ import com.ciy.plugin.ui.InputUrlDialog
 import com.ciy.plugin.ui.SelectApiDialog
 import com.ciy.plugin.ui.ShowErrorListDialog
 import com.ciy.plugin.utils.ApiServiceGenerate
+import com.ciy.plugin.utils.BaseResponseGenerate
 import com.ciy.plugin.utils.URLConstantGenerate
 import com.ciy.plugin.utils.URLConstantGenerate.propertyMap
 import com.intellij.openapi.actionSystem.AnAction
@@ -39,7 +40,10 @@ class ShowInputDialogAction : AnAction() {
         val urlConstantClassName = "URLConstant"
 
         @JvmStatic
-        val apiSeriviceClassName = "ApiService"
+        val apiServiceClassName = "ApiService"
+
+        @JvmStatic
+        val baseResponseClassName = "BaseResponse"
     }
 
     /**
@@ -98,8 +102,10 @@ class ShowInputDialogAction : AnAction() {
         // 生成 URLConstant.kt
         val urlConstantFile = URLConstantGenerate.createURLConstant(urlConstantClassName, rootDir, packName, apiInfoList)
         urlConstantFile.writeTo(rootDir)
+        // 生成 BaseResponse.kt
+        BaseResponseGenerate.createBaseResponse(baseResponseClassName, rootDir, packName)
         // 生成ApiService.kt
-        val apiServiceFile = ApiServiceGenerate.createApiService(apiSeriviceClassName, rootDir, packName, urlConstantFile, apiInfoList)
+        val apiServiceFile = ApiServiceGenerate.createApiService(apiServiceClassName, rootDir, packName, urlConstantFile, apiInfoList)
         apiServiceFile.writeTo(rootDir)
     }
 
