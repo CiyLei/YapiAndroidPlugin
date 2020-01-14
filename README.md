@@ -2,7 +2,7 @@
 
 ## 下载安装插件
 
-1. 下载此[插件](https://github.com/CiyLei/YapiAndroidPlugin/blob/master/Plugin/Plugin.zip?raw=true)
+1. 下载此[插件](https://github.com/CiyLei/YapiAndroidPlugin/raw/baseResponse/Plugin/Plugin.zip)
 
 2.  `File` -> `Settings...` -> `Plugins` -> `Installed` -> `Install Plugin from Disk...` 选择插件，然后重启 IDE
 ![安装插件](https://raw.githubusercontent.com/CiyLei/YapiAndroidPlugin/master/img/%E5%AE%89%E8%A3%85%E6%8F%92%E4%BB%B6.png)
