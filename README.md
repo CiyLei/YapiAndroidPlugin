@@ -31,11 +31,12 @@
 
 ## 生成模型说明
 
-此插件一共会生成3种类
+此插件一共会生成4种类
 
 * URLConstant.kt
 * ApiService.kt
 * 每个接口所需要的 Model
+* BaseResponse.kt
 
 > 插件每次生成都会覆盖文件和内容的，所以不建议手动修改这里类（有例外）
 
@@ -52,6 +53,22 @@
 3. 每个接口所需要的 Model
 
     这里的模型包括 Post 接口所需的入参数据模型和所有接口响应的数据模型
+
+4. BaseResponse.kt
+
+    所有 Response 的数据模型都会被这个嵌套
+    
+    ```kotlin
+    open class BaseResponse<T> : Serializable {
+      var code: Int? = 0
+    
+      var success: Boolean? = false
+    
+      var msg: String? = ""
+    
+      var data: T? = null
+    }
+```
 
 ## 注意事项
 
