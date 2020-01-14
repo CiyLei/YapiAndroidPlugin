@@ -9,7 +9,7 @@
 
 ## 生成模型
 
-1. 在 [yapi](http://172.17.0.71:3000) 平台中找到具体的项目，然后复制项目的 token
+1. 在 yapi 平台中找到具体的项目，然后复制项目的 token
 
     ![yapi选择项目](https://raw.githubusercontent.com/CiyLei/YapiAndroidPlugin/master/img/yapi%E9%80%89%E6%8B%A9%E9%A1%B9%E7%9B%AE.png)
     
