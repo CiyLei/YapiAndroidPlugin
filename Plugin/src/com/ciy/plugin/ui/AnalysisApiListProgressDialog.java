@@ -6,6 +6,7 @@ import com.ciy.plugin.modle.ApiInfoBean;
 import com.ciy.plugin.modle.YapiResult;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.intellij.ide.util.PropertiesComponent;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -61,9 +62,9 @@ public class AnalysisApiListProgressDialog extends JDialog {
     private void startAnalysis(ApiBean apiBean) {
         if (apiBean != null) {
             int id = apiBean.get_id();
-            HttpUrl url = HttpUrl.parse(Constants.yapiUrl + "/api/interface/get").newBuilder()
+            HttpUrl url = HttpUrl.parse(PropertiesComponent.getInstance().getValue(Constants.KEY_YAPI) + "/api/interface/get").newBuilder()
                     .addQueryParameter("id", String.valueOf(id))
-                    .addQueryParameter("token", Constants.token).build();
+                    .addQueryParameter("token", PropertiesComponent.getInstance().getValue(Constants.KEY_TOKEN)).build();
             httpClient.newCall(new Request.Builder().get().url(url).build()).enqueue(new Callback() {
                 @Override
                 public void onFailure(@NotNull Call call, @NotNull IOException e) {

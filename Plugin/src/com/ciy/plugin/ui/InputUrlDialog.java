@@ -1,14 +1,12 @@
 package com.ciy.plugin.ui;
 
 import com.ciy.plugin.Constants;
-import com.ciy.plugin.modle.ApiBean;
 import com.ciy.plugin.modle.ProjectInfoBean;
 import com.ciy.plugin.modle.YapiResult;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.intellij.openapi.module.Module;
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Key;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +14,6 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.util.List;
 
 public class InputUrlDialog extends JDialog {
     private JPanel contentPane;
@@ -39,6 +36,11 @@ public class InputUrlDialog extends JDialog {
         this.project = project;
         this.listener = listener;
         httpClient = new OkHttpClient();
+        if (!PropertiesComponent.getInstance().getValue(Constants.KEY_YAPI, "").isEmpty()) {
+            // 读取历史记录
+            tfUrl.setText(PropertiesComponent.getInstance().getValue(Constants.KEY_YAPI));
+            tfToken.setText(PropertiesComponent.getInstance().getValue(Constants.KEY_TOKEN));
+        }
 
         btnNext.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -59,8 +61,8 @@ public class InputUrlDialog extends JDialog {
 
                 @Override
                 public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                    Constants.yapiUrl = tfUrl.getText();
-                    Constants.token = tfToken.getText();
+                    PropertiesComponent.getInstance().setValue(Constants.KEY_YAPI, tfUrl.getText());
+                    PropertiesComponent.getInstance().setValue(Constants.KEY_TOKEN, tfToken.getText());
                     YapiResult<ProjectInfoBean> projectInfo = new Gson().fromJson(response.body().string(),
                             new TypeToken<YapiResult<ProjectInfoBean>>() {
                             }.getType());
