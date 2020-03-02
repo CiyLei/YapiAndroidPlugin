@@ -6,14 +6,12 @@ import com.ciy.plugin.modle.*;
 import com.ciy.plugin.utils.URLConstantGenerate;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.newvfs.impl.VirtualDirectoryImpl;
-import com.squareup.kotlinpoet.FileSpec;
 import okhttp3.*;
-import org.apache.maven.model.FileSet;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -29,7 +27,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class SelectApiDialog extends JDialog {
     private JPanel contentPane;
@@ -131,9 +128,9 @@ public class SelectApiDialog extends JDialog {
      */
     private void getCatMenu() {
         Integer projectId = projectInfo.get_id();
-        HttpUrl url = HttpUrl.parse(Constants.yapiUrl + "/api/interface/getCatMenu").newBuilder()
+        HttpUrl url = HttpUrl.parse(PropertiesComponent.getInstance().getValue(Constants.KEY_YAPI) + "/api/interface/getCatMenu").newBuilder()
                 .addQueryParameter("project_id", projectId.toString())
-                .addQueryParameter("token", Constants.token).build();
+                .addQueryParameter("token", PropertiesComponent.getInstance().getValue(Constants.KEY_TOKEN)).build();
         httpClient.newCall(new Request.Builder().get().url(url).build()).enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
@@ -161,11 +158,11 @@ public class SelectApiDialog extends JDialog {
      */
     private void getApiList() {
         Integer projectId = projectInfo.get_id();
-        HttpUrl url = HttpUrl.parse(Constants.yapiUrl + "/api/interface/list").newBuilder()
+        HttpUrl url = HttpUrl.parse(PropertiesComponent.getInstance().getValue(Constants.KEY_YAPI) + "/api/interface/list").newBuilder()
                 .addQueryParameter("page", "1")
                 .addQueryParameter("limit", String.valueOf(Integer.MAX_VALUE))
                 .addQueryParameter("project_id", projectId.toString())
-                .addQueryParameter("token", Constants.token).build();
+                .addQueryParameter("token", PropertiesComponent.getInstance().getValue(Constants.KEY_TOKEN)).build();
         httpClient.newCall(new Request.Builder().get().url(url).build()).enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
