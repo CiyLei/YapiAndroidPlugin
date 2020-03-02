@@ -5,5 +5,5 @@ package com.ciy.plugin
  */
 object Constants {
     const val KEY_YAPI = "YAPI_URL"
-    const val KEY_TOKEN = "TOKEN"
+    const val KEY_TOKEN = "YAPI_TOKEN"
 }
