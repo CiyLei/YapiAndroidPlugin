@@ -16,6 +16,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.rootManager
+import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.vfs.newvfs.impl.VirtualDirectoryImpl
 import java.io.File
 
@@ -69,8 +70,7 @@ class ShowInputDialogAction : AnAction() {
     fun analysisApiList(module: Module, packName: String, apiList: List<ApiBean>) {
         AnalysisApiListProgressDialog(apiList, AnalysisApiListProgressDialog.AnalysisApiListProgressDialogListener {
             // 找到模块源代码存放的根目录
-            val javaSrc: VirtualDirectoryImpl? =
-                module.rootManager.getSourceRoots(false).find { it2 -> it2.name == "java" } as? VirtualDirectoryImpl
+            val javaSrc: VirtualDirectoryImpl? = ModuleRootManager.getInstance(module).sourceRoots.find { it2 -> it2.path.endsWith("src/main/java") } as? VirtualDirectoryImpl
             if (javaSrc != null) {
                 val rootDir = File(javaSrc.path)
                 if (!rootDir.exists()) {
