@@ -10,6 +10,7 @@ import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
@@ -192,43 +193,48 @@ public class SelectApiDialog extends JDialog {
     private void readSelectApi() {
         Module selectModule = moduleList.get(cbModule.getSelectedIndex());
         if (selectModule != null) {
-            String pack = tfPack.getText().replace(".", "/");
-            VirtualFile apiServiceFile = selectModule.getModuleFile().getParent().findFileByRelativePath("src/main/java/" +
-                    pack + "/" + ShowInputDialogAction.Companion.getUrlConstantClassName() + ".kt");
-            if (apiServiceFile != null && apiServiceFile.exists()) {
-                // URLConstant 存在读取里面的url
-                try {
-                    BufferedReader br = new BufferedReader(new InputStreamReader(apiServiceFile.getInputStream()));
-                    StringBuilder sb = new StringBuilder();
-                    String len = "";
-                    while ((len = br.readLine()) != null) {
-                        sb.append(len);
-                    }
-                    String sourceText = sb.toString();
-                    if (!sourceText.isEmpty()) {
-                        Pattern pattern = Pattern.compile("\\$" + URLConstantGenerate.INSTANCE.getPrefixPropertyName() +
-                                "(.+?)\\$" + URLConstantGenerate.INSTANCE.getSuffixPropertyName());
-                        Matcher matcher = pattern.matcher(sourceText);
-                        List<String> urlList = new ArrayList<>();
-                        while (matcher.find()) {
-                            if (matcher.group(1) != null) {
-                                urlList.add(matcher.group(1));
-                            }
-                        }
-                        apiList.stream().forEach(it -> {
-                            it.setSelect(urlList.contains(it.getPath()));
-                        });
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            VirtualFile sourcePath = getSourcePath(selectModule);
+            if (sourcePath == null) {
+                lb.setText("无法找到源代码文件");
             } else {
-                // URLConstant 不存在则全选
-                apiList.forEach(it -> {
-                    it.setSelect(false);
-                });
+                String pack = tfPack.getText().replace(".", "/");
+                VirtualFile apiServiceFile = sourcePath.findFileByRelativePath(pack + "/" +
+                        ShowInputDialogAction.Companion.getUrlConstantClassName() + ".kt");
+                if (apiServiceFile != null && apiServiceFile.exists()) {
+                    // URLConstant 存在读取里面的url
+                    try {
+                        BufferedReader br = new BufferedReader(new InputStreamReader(apiServiceFile.getInputStream()));
+                        StringBuilder sb = new StringBuilder();
+                        String len = "";
+                        while ((len = br.readLine()) != null) {
+                            sb.append(len);
+                        }
+                        String sourceText = sb.toString();
+                        if (!sourceText.isEmpty()) {
+                            Pattern pattern = Pattern.compile("\\$" + URLConstantGenerate.INSTANCE.getPrefixPropertyName() +
+                                    "(.+?)\\$" + URLConstantGenerate.INSTANCE.getSuffixPropertyName());
+                            Matcher matcher = pattern.matcher(sourceText);
+                            List<String> urlList = new ArrayList<>();
+                            while (matcher.find()) {
+                                if (matcher.group(1) != null) {
+                                    urlList.add(matcher.group(1));
+                                }
+                            }
+                            apiList.stream().forEach(it -> {
+                                it.setSelect(urlList.contains(it.getPath()));
+                            });
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    // URLConstant 不存在则全选
+                    apiList.forEach(it -> {
+                        it.setSelect(false);
+                    });
+                }
+                refreshListData();
             }
-            refreshListData();
         }
     }
 
@@ -277,13 +283,36 @@ public class SelectApiDialog extends JDialog {
     private void onOK() {
         if (cbModule.getSelectedIndex() < moduleList.size() && !tfPack.getText().isEmpty()) {
             Module selectModule = moduleList.get(cbModule.getSelectedIndex());
-            if (listener != null) {
-                this.listener.onOk(selectModule, tfPack.getText(), apiList.stream().filter(ApiBean::getSelect).collect(Collectors.toList()));
+            VirtualFile sourcePath = getSourcePath(selectModule);
+            if (sourcePath == null) {
+                lb.setText("无法找到源代码文件");
+            } else {
+                if (listener != null) {
+                    this.listener.onOk(selectModule, tfPack.getText(), apiList.stream().filter(ApiBean::getSelect).collect(Collectors.toList()));
+                }
+                dispose();
             }
-            dispose();
         } else {
             lb.setText("模块或者包名格式错误");
         }
+    }
+
+    /**
+     * 获取模块源代码文件
+     *
+     * @param module 模块
+     * @return 源代码文件
+     */
+    private VirtualFile getSourcePath(Module module) {
+        VirtualFile[] sourceRoots = ModuleRootManager.getInstance(module).getSourceRoots();
+        if (sourceRoots != null && sourceRoots.length > 0) {
+            for (VirtualFile sourceRoot : sourceRoots) {
+                if (sourceRoot.getPath().endsWith("src/main/java")) {
+                    return sourceRoot;
+                }
+            }
+        }
+        return null;
     }
 
     private void onCancel() {
