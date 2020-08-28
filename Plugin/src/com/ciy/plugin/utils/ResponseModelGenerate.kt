@@ -20,13 +20,17 @@ object ResponseModelGenerate {
         for (i in 1 until cacheTypeList.size) {
             sourceCode = sourceCode.replace("import ${cacheTypeList[i].name}\n", "")
         }
-        var file = File(rootDir.absolutePath + File.separator +
-                sourceFile.packageName.replace(".", File.separator) + File.separator + sourceFile.name + ".kt")
+        var file = File(
+            rootDir.absolutePath + File.separator +
+                    sourceFile.packageName.replace(".", File.separator) + File.separator + sourceFile.name + ".kt"
+        )
         if (file.exists()) {
             file.delete()
         }
-        file = File(rootDir.absolutePath + File.separator +
-                sourceFile.packageName.replace(".", File.separator) + File.separator)
+        file = File(
+            rootDir.absolutePath + File.separator +
+                    sourceFile.packageName.replace(".", File.separator) + File.separator
+        )
         file.mkdirs()
         file = File(file.absolutePath + File.separator + sourceFile.name + ".kt")
         if (file.createNewFile()) {
@@ -62,7 +66,12 @@ object ResponseModelGenerate {
     /**
      * 分析JsonSchema
      */
-    fun analysisJsonSchema(jsonSchema: JsonSchemaBean, name: String, cacheTypeList: ArrayList<TypeSpec>, hostClassName: String = "", required: Boolean = false): Any? {
+    fun analysisJsonSchema(
+        jsonSchema: JsonSchemaBean,
+        name: String,
+        cacheTypeList: ArrayList<TypeSpec>,
+        hostClassName: String = ""
+    ): Any? {
         if (jsonSchema == null || jsonSchema.type == null) {
             return null
         }
@@ -71,14 +80,8 @@ object ResponseModelGenerate {
             "object" -> {
                 if (jsonSchema.properties.isEmpty()) {
                     // 没有字段的话，视为Any
-                    return PropertySpec.builder(name, Any::class.asTypeName().copy(!required)).addKdoc(jsonSchema.description ?: "")
-                        .apply {
-                            if (!required) {
-                                initializer("null")
-                            } else {
-                                initializer(name)
-                            }
-                        }.mutable().build()
+                    return PropertySpec.builder(name, Any::class.asTypeName().copy(true))
+                        .addKdoc(jsonSchema.description ?: "").initializer(name).mutable().build()
                 }
                 // 构造方法
                 val constructorFunBuilder = FunSpec.constructorBuilder()
@@ -86,74 +89,54 @@ object ResponseModelGenerate {
                 val propertyList = ArrayList<PropertySpec>()
                 // 循环所有字段
                 for ((key, value) in jsonSchema.properties) {
-                    // 是否必须
-                    val requiredP = jsonSchema.required?.contains(key) == true
                     // 如果有多个类 那么下一个类名前面加上一个类的名称
-                    val result = analysisJsonSchema(value, key, cacheTypeList, "$hostClassName${captureName(name)}", requiredP)
+                    val result =
+                        analysisJsonSchema(value, key, cacheTypeList, "$hostClassName${captureName(name)}")
                     if (result is PropertySpec) {
-                        if (requiredP) {
-                            constructorFunBuilder.addParameter(key, result.type).addKdoc(value.description ?: "")
-                        }
+                        constructorFunBuilder.addParameter(ParameterSpec.builder(key, result.type).defaultValue("null").build())
+                            .addKdoc(value.description ?: "")
                         propertyList.add(result)
                     } else if (result is TypeSpec) {
-                        val className = ClassName("", result.name!!)
-                        if (requiredP) {
-                            constructorFunBuilder.addParameter(key, className).addKdoc(value.description ?: "")
-                        }
+                        val className = ClassName("", result.name!!).copy(true)
+                        constructorFunBuilder.addParameter(ParameterSpec.builder(key, className).defaultValue("null").build())
+                            .addKdoc(value.description ?: "")
                         propertyList.add(
-                            PropertySpec.builder(key, className.copy(!requiredP)).addKdoc(value.description ?: "").apply {
-                                if (!requiredP) {
-                                    initializer("null")
-                                } else {
-                                    initializer(key)
-                                }
-                            }.mutable().build()
+                            PropertySpec.builder(key, className).addKdoc(
+                                value.description ?: ""
+                            ).mutable().initializer(key).build()
                         )
                     }
                 }
-//                val typeBuilder = TypeSpec.classBuilder("$hostClassName${captureName(name)}").addModifiers(KModifier.DATA)
-//                    .primaryConstructor(constructorFunBuilder.build()).addKdoc(jsonSchema.description ?: "")
-                val typeBuilder = TypeSpec.classBuilder("$hostClassName${captureName(name)}").addKdoc(jsonSchema.description ?: "")
-                typeBuilder.addProperties(propertyList).addSuperinterface(Serializable::class).primaryConstructor(constructorFunBuilder.build())
+                val typeBuilder =
+                    TypeSpec.classBuilder("$hostClassName${captureName(name)}").addModifiers(KModifier.DATA)
+                        .primaryConstructor(constructorFunBuilder.build()).addProperties(propertyList)
+                        .addKdoc(jsonSchema.description ?: "").addSuperinterface(Serializable::class)
+//                val typeBuilder = TypeSpec.classBuilder("$hostClassName${captureName(name)}").addKdoc(jsonSchema.description ?: "")
+//                typeBuilder.addProperties(propertyList).addSuperinterface(Serializable::class).primaryConstructor(constructorFunBuilder.build())
                 val type = typeBuilder.build()
                 cacheTypeList.add(0, type)
                 return type
             }
             // 列表
             "array" -> {
-                val result = analysisJsonSchema(jsonSchema.items, captureName(name), cacheTypeList, hostClassName, required)
+                val result =
+                    analysisJsonSchema(jsonSchema.items, captureName(name), cacheTypeList, hostClassName)
                 if (result is PropertySpec) {
                     val listProperty = LIST.parameterizedBy(result.type)
-                    return PropertySpec.builder(name, listProperty.copy(!required)).addKdoc(jsonSchema.description ?: "")
-                        .mutable().apply {
-                            if (!required) {
-                                initializer("null")
-                            } else {
-                                initializer(name)
-                            }
-                        }.build()
+                    return PropertySpec.builder(name, listProperty.copy(true))
+                        .addKdoc(jsonSchema.description ?: "")
+                        .mutable().initializer(name).build()
                 } else if (result is TypeSpec) {
                     val listProperty = LIST.parameterizedBy(ClassName("", result.name!!))
-                    return PropertySpec.builder(name, listProperty.copy(!required)).addKdoc(jsonSchema.description ?: "")
-                        .mutable().apply {
-                            if (!required) {
-                                initializer("null")
-                            } else {
-                                initializer(name)
-                            }
-                        }.build()
+                    return PropertySpec.builder(name, listProperty.copy(true))
+                        .addKdoc(jsonSchema.description ?: "")
+                        .mutable().initializer(name).build()
                 }
             }
             // 基本类型
             else -> {
-                return PropertySpec.builder(name, getType(jsonSchema.type.toString()).copy(!required))
-                    .addKdoc(jsonSchema.description ?: "").mutable().apply {
-                    if (!required) {
-                        initializer("null")
-                    } else {
-                        initializer(name)
-                    }
-                }.build()
+                return PropertySpec.builder(name, getType(jsonSchema.type.toString()).copy(true))
+                    .addKdoc(jsonSchema.description ?: "").mutable().initializer(name).build()
             }
         }
         return null
@@ -182,5 +165,38 @@ object ResponseModelGenerate {
         "number" -> Double::class.asTypeName()
         "Number" -> Double::class.asTypeName()
         else -> Any::class.asTypeName()
+    }
+
+    @JvmStatic
+    fun main(args: Array<String>) {
+        val typeSpec = TypeSpec.classBuilder("Person")
+            .addModifiers(KModifier.DATA)
+            .primaryConstructor(
+                FunSpec.constructorBuilder()
+                    .addParameter("id", Int::class)
+                    .addParameter(ParameterSpec.builder("name", String::class).defaultValue("null").build())
+                    .addParameter("surname", String::class)
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder("id", Int::class)
+                    .initializer("id")
+                    .mutable()
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder("name", String::class)
+                    .initializer("name")
+                    .mutable()
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder("surname", String::class)
+                    .initializer("surname")
+                    .mutable()
+                    .build()
+            )
+            .build()
+        println(typeSpec.toString())
     }
 }
